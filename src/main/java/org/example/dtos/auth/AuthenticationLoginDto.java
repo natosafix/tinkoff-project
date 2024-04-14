@@ -8,7 +8,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @AllArgsConstructor
 public class AuthenticationLoginDto {
-    private String username;
-    private String password;
+  private String username;
+  private String password;
 }
 

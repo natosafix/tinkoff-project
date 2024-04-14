@@ -1,24 +1,31 @@
 package org.example.services;
 
+import lombok.RequiredArgsConstructor;
 import org.example.domain.User;
 import org.example.exceptions.UserNotFoundException;
 import org.example.repositories.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    private final UserRepository userRepository;
+  private final UserRepository userRepository;
 
-    public User getUserByUsername(String username) {
-        var user = userRepository
-                .findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException(username));
+  /**
+   * Get user by username.
+   *
+   * @param username username
+   * @return user
+   */
+  public User getUserByUsername(String username) {
+    var user = userRepository
+            .findByUsername(username)
+            .orElseThrow(() -> new UserNotFoundException(username));
 
-        if (user.getIsDeleted())
-            throw new UserNotFoundException(username);
-
-        return user;
+    if (user.getIsDeleted()) {
+      throw new UserNotFoundException(username);
     }
+
+    return user;
+  }
 }

@@ -15,47 +15,47 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ContextConfiguration(initializers = PostgreTestConfig.Initializer.class)
 public class JwtServiceTests extends ServiceTestsBase {
 
-    @Autowired
-    private JwtService jwtService;
+  @Autowired
+  private JwtService jwtService;
 
-    @Test
-    void getUsernameFromToken_ShouldReturnUsername() {
-        var userGiven = getTestUser();
-        var token = jwtService.generateToken(userGiven);
+  @Test
+  void getUsernameFromToken_ShouldReturnUsername() {
+    var userGiven = getTestUser();
+    var token = jwtService.generateToken(userGiven);
 
-        var username = jwtService.getUsernameFromToken(token);
+    var username = jwtService.getUsernameFromToken(token);
 
-        assertEquals(userGiven.getUsername(), username);
-    }
+    assertEquals(userGiven.getUsername(), username);
+  }
 
-    @Test
-    void getRoleFromToken_ShouldReturnRole() {
-        var userGiven = getTestUser();
-        var token = jwtService.generateToken(userGiven);
+  @Test
+  void getRoleFromToken_ShouldReturnRole() {
+    var userGiven = getTestUser();
+    var token = jwtService.generateToken(userGiven);
 
-        var role = jwtService.getRoleFromToken(token);
+    var role = jwtService.getRoleFromToken(token);
 
-        assertEquals(userGiven.getRole().toString(), role);
-    }
+    assertEquals(userGiven.getRole().toString(), role);
+  }
 
-    @Test
-    public void getClaim_ShouldReturnClaim() {
-        var userGiven = getTestUser();
-        var token = jwtService.generateToken(userGiven);
+  @Test
+  public void getClaim_ShouldReturnClaim() {
+    var userGiven = getTestUser();
+    var token = jwtService.generateToken(userGiven);
 
-        var claimValue = jwtService.getClaim(token, Claims::getSubject);
+    var claimValue = jwtService.getClaim(token, Claims::getSubject);
 
-        assertEquals(userGiven.getUsername(), claimValue);
-    }
+    assertEquals(userGiven.getUsername(), claimValue);
+  }
 
-    @Test
-    public void generateToken_ShouldGenerateValidToken() {
-        var user = getTestUser();
+  @Test
+  public void generateToken_ShouldGenerateValidToken() {
+    var user = getTestUser();
 
-        var token = jwtService.generateToken(user);
+    var token = jwtService.generateToken(user);
 
-        assertEquals(user.getUsername(), jwtService.getUsernameFromToken(token));
-        assertEquals(user.getRole().toString(), jwtService.getRoleFromToken(token));
-        assertTrue(jwtService.isTokenValid(token, user));
-    }
+    assertEquals(user.getUsername(), jwtService.getUsernameFromToken(token));
+    assertEquals(user.getRole().toString(), jwtService.getRoleFromToken(token));
+    assertTrue(jwtService.isTokenValid(token, user));
+  }
 }

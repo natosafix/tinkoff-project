@@ -15,45 +15,49 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class AppExceptionHandler {
-    @Value("${minio.image-size}")
-    private int maxImageSize;
+  @Value("${minio.image-size}")
+  private int maxImageSize;
 
-    @ExceptionHandler(BaseNotFoundException.class)
-    public ResponseEntity<UiSuccessContainer> handleEntityNotFoundException(
-            BaseNotFoundException notFoundException) {
-        return handleException(HttpStatus.NOT_FOUND, notFoundException.getMessage());
-    }
+  @ExceptionHandler(BaseNotFoundException.class)
+  public ResponseEntity<UiSuccessContainer> handleEntityNotFoundException(
+          BaseNotFoundException notFoundException) {
+    return handleException(HttpStatus.NOT_FOUND, notFoundException.getMessage());
+  }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<UiSuccessContainer> handleDataIntegrityViolationException(
-            DataIntegrityViolationException dataIntegrityViolationException) {
-        return handleException(HttpStatus.CONFLICT, dataIntegrityViolationException.getCause().getLocalizedMessage());
-    }
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<UiSuccessContainer> handleDataIntegrityViolationException(
+          DataIntegrityViolationException dataIntegrityViolationException) {
+    return handleException(HttpStatus.CONFLICT,
+            dataIntegrityViolationException.getCause().getLocalizedMessage());
+  }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<UiSuccessContainer> handleIllegalArgumentException(
-            IllegalArgumentException illegalArgumentException) {
-        return handleException(HttpStatus.BAD_REQUEST, illegalArgumentException.getCause().getLocalizedMessage());
-    }
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ResponseEntity<UiSuccessContainer> handleIllegalArgumentException(
+          IllegalArgumentException illegalArgumentException) {
+    return handleException(HttpStatus.BAD_REQUEST,
+            illegalArgumentException.getCause().getLocalizedMessage());
+  }
 
-    @ExceptionHandler(AccessException.class)
-    public ResponseEntity<UiSuccessContainer> handleAccessException(AccessException exception) {
-        return handleException(HttpStatus.FORBIDDEN, "Доступ запрещен: " + exception.getMessage());
-    }
+  @ExceptionHandler(AccessException.class)
+  public ResponseEntity<UiSuccessContainer> handleAccessException(AccessException exception) {
+    return handleException(HttpStatus.FORBIDDEN, "Доступ запрещен: " + exception.getMessage());
+  }
 
-    @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<UiSuccessContainer> handleBadRequestException(
-            BadRequestException exception) {
-        return handleException(HttpStatus.BAD_REQUEST, exception.getMessage());
-    }
+  @ExceptionHandler(BadRequestException.class)
+  public ResponseEntity<UiSuccessContainer> handleBadRequestException(
+          BadRequestException exception) {
+    return handleException(HttpStatus.BAD_REQUEST, exception.getMessage());
+  }
 
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<UiSuccessContainer> handleMaxUploadSizeExceededException() {
-        return handleException(HttpStatus.BAD_REQUEST, "Размер файла превышает " + maxImageSize / 1024 / 1024 + "МБ");
-    }
+  @ExceptionHandler(MaxUploadSizeExceededException.class)
+  public ResponseEntity<UiSuccessContainer> handleMaxUploadSizeExceededException() {
+    return handleException(HttpStatus.BAD_REQUEST,
+            "Размер файла превышает " + maxImageSize / 1024 / 1024 + "МБ");
+  }
 
-    private ResponseEntity<UiSuccessContainer> handleException(HttpStatusCode status, String exceptionMessage) {
-        var body = new UiSuccessContainer(false, exceptionMessage);
-        return new ResponseEntity<>(body, status);
-    }
+  private ResponseEntity<UiSuccessContainer> handleException(HttpStatusCode status,
+                                                             String exceptionMessage) {
+    var body = new UiSuccessContainer(false, exceptionMessage);
+    return new ResponseEntity<>(body, status);
+  }
 }

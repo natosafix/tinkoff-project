@@ -19,10 +19,10 @@
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <lombok.mapstruct.binding.version>0.2.0</lombok.mapstruct.binding.version>
         <cxf-jaxws.version>3.5.2</cxf-jaxws.version>
-        <spring-boot-starter-redis-version>3.2.3</spring-boot-starter-redis-version>
         <json-web-token-version>0.12.5</json-web-token-version>
         <testcontainers.version>1.19.7</testcontainers.version>
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
+        <checkstyle-maven-plugin.version>3.0.0</checkstyle-maven-plugin.version>
     </properties>
     <dependencies>
 
@@ -232,6 +232,26 @@
                         <phase>test</phase>
                         <goals>
                             <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle-maven-plugin.version}</version>
+                <configuration>
+                    <configLocation>google_checks.xml</configLocation>
+                    <violationSeverity>warning</violationSeverity>
+                    <consoleOutput>true</consoleOutput>
+                    <linkXRef>false</linkXRef>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
                         </goals>
                     </execution>
                 </executions>

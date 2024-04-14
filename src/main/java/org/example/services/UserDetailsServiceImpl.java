@@ -8,11 +8,11 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
-    private final UserService userService;
+  private final UserService userService;
 
-    @Override
-    public UserDetails loadUserByUsername(String username) {
-        return userService.getUserByUsername(username);
-    }
+  @Override
+  public UserDetails loadUserByUsername(String username) {
+    return userService.getUserByUsername(username);
+  }
 }
 

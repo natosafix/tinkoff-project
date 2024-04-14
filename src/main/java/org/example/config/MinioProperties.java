@@ -9,17 +9,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "minio")
 public class MinioProperties {
 
-    private String url;
+  private String url;
 
-    private int port;
+  private int port;
 
-    private String accessKey;
+  private String accessKey;
 
-    private String secretKey;
+  private String secretKey;
 
-    private boolean secure;
+  private boolean secure;
 
-    private String bucket;
+  private String bucket;
 
-    private int imageSize;
+  private int imageSize;
 }
