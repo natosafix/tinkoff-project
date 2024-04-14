@@ -1,0 +1,46 @@
+version: "3"
+services:
+
+  server:
+    image: tinkoff-project:0.0.1
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - pg-server-db
+      - minio
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://pg-server-db/server_db
+
+  pg-server-db:
+    image: postgres:14-alpine3.18
+    container_name: server_db
+    environment:
+      POSTGRES_DB: "server_db"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - server-db:/var/lib/postgresql/data
+    ports:
+      - "15432:5432"
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: user
+      MINIO_ROOT_PASSWORD: password
+    command: server /data --console-address :9001
+    volumes:
+      - ./environment/minio/data:/data
+
+volumes:
+  server-db:
