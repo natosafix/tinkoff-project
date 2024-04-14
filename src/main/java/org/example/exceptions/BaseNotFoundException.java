@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class BaseNotFoundException extends RuntimeException {
-    public BaseNotFoundException(String reason) {
-        super(reason);
-    }
+  public BaseNotFoundException(String reason) {
+    super(reason);
+  }
 }

@@ -10,6 +10,6 @@ import org.example.domain.Image;
 @AllArgsConstructor
 public class GetImagesResponse {
 
-    @Schema(type = "array", description = "Список изображений")
-    Image[] images;
+  @Schema(type = "array", description = "Список изображений")
+  Image[] images;
 }

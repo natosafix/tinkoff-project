@@ -8,11 +8,17 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties(MinioProperties.class)
 public class MinioConfig {
-    @Bean
-    public MinioClient minioClient(MinioProperties properties) {
-        return MinioClient.builder()
-                .credentials(properties.getAccessKey(), properties.getSecretKey())
-                .endpoint(properties.getUrl(), properties.getPort(), properties.isSecure())
-                .build();
-    }
+  /**
+   * Get MinioClient.
+   *
+   * @param properties application props
+   * @return MinioClient
+   */
+  @Bean
+  public MinioClient minioClient(MinioProperties properties) {
+    return MinioClient.builder()
+            .credentials(properties.getAccessKey(), properties.getSecretKey())
+            .endpoint(properties.getUrl(), properties.getPort(), properties.isSecure())
+            .build();
+  }
 }

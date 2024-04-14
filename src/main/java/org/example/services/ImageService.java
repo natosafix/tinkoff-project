@@ -14,52 +14,81 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ImageService {
-    private final MinioService minioService;
-    private final UserService userService;
-    private final ImageRepository imageRepository;
+  private final MinioService minioService;
+  private final UserService userService;
+  private final ImageRepository imageRepository;
 
-    private Image getImage(String imageId) {
-        return imageRepository.findById(imageId).orElseThrow(() -> new ImageNotFoundException(imageId));
+  private Image getImage(String imageId) {
+    return imageRepository.findById(imageId).orElseThrow(() -> new ImageNotFoundException(imageId));
+  }
+
+  /**
+   * Get user images.
+   *
+   * @param username username
+   * @return user images
+   */
+  public List<Image> getUserImages(String username) {
+    var user = userService.getUserByUsername(username);
+
+    return imageRepository.findAll(Example.of(new Image().setUser(user)));
+  }
+
+  /**
+   * Download image.
+   *
+   * @param imageId image id
+   * @param authorUsername author username
+   * @return image bytes
+   * @throws Exception when some went wrong
+   */
+  public byte[] downloadImage(String imageId, String authorUsername) throws Exception {
+    var image = getImage(imageId);
+    var user = userService.getUserByUsername(authorUsername);
+    checkUserAccess(user.getId(), image);
+
+    return minioService.downloadImage(image.getImageId());
+  }
+
+  /**
+   * Upload image.
+   *
+   * @param file image
+   * @param authorUsername author username
+   * @return image
+   * @throws Exception when some went wrong
+   */
+  public Image uploadImage(MultipartFile file, String authorUsername) throws Exception {
+    var user = userService.getUserByUsername(authorUsername);
+    var image = minioService.uploadImage(file);
+
+    image.setUser(user);
+    imageRepository.save(image);
+
+    return image;
+  }
+
+  /**
+   * Delete image.
+   *
+   * @param imageId image id
+   * @param authorUsername author username
+   * @throws Exception when some went wrong
+   */
+  public void deleteImage(String imageId, String authorUsername) throws Exception {
+    var image = getImage(imageId);
+    var user = userService.getUserByUsername(authorUsername);
+    checkUserAccess(user.getId(), image);
+
+    imageRepository.deleteById(imageId);
+    minioService.deleteImage(image.getImageId());
+  }
+
+  private void checkUserAccess(int currentUserId, Image image) {
+    var imageOwnerId = image.getUser().getId();
+
+    if (!imageOwnerId.equals(currentUserId)) {
+      throw new ForbiddenException();
     }
-
-    public List<Image> getUserImages(String username) {
-        var user = userService.getUserByUsername(username);
-
-        return imageRepository.findAll(Example.of(new Image().setUser(user)));
-    }
-
-    public byte[] downloadImage(String imageId, String authorUsername) throws Exception {
-        var image = getImage(imageId);
-        var user = userService.getUserByUsername(authorUsername);
-        checkUserAccess(user.getId(), image);
-
-        return minioService.downloadImage(image.getImageId());
-    }
-
-    public Image uploadImage(MultipartFile file, String authorUsername) throws Exception {
-        var user = userService.getUserByUsername(authorUsername);
-        var image = minioService.uploadImage(file);
-
-        image.setUser(user);
-        imageRepository.save(image);
-
-        return image;
-    }
-
-    public void deleteImage(String imageId, String authorUsername) throws Exception {
-        var image = getImage(imageId);
-        var user = userService.getUserByUsername(authorUsername);
-        checkUserAccess(user.getId(), image);
-
-        imageRepository.deleteById(imageId);
-        minioService.deleteImage(image.getImageId());
-    }
-
-    private void checkUserAccess(int currentUserId, Image image) {
-        var imageOwnerId = image.getUser().getId();
-
-        if (!imageOwnerId.equals(currentUserId)) {
-            throw new ForbiddenException();
-        }
-    }
+  }
 }

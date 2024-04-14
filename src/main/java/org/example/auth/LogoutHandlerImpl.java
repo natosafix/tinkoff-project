@@ -11,14 +11,14 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class LogoutHandlerImpl implements LogoutHandler {
-    @Override
-    public void logout(HttpServletRequest request,
-                       HttpServletResponse response,
-                       Authentication authentication) {
-        var authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return;
-        }
-        SecurityContextHolder.clearContext();
+  @Override
+  public void logout(HttpServletRequest request,
+                     HttpServletResponse response,
+                     Authentication authentication) {
+    var authHeader = request.getHeader("Authorization");
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+      return;
     }
+    SecurityContextHolder.clearContext();
+  }
 }

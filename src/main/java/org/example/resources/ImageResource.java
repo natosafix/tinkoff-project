@@ -16,7 +16,14 @@ import org.example.services.ImageService;
 import org.example.services.JwtService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.charset.StandardCharsets;
@@ -28,90 +35,127 @@ import java.util.UUID;
 @SecurityRequirement(name = "bearerAuth")
 @RequiredArgsConstructor
 public class ImageResource {
-    private final ImageService imageService;
-    private final ImageMapper imageMapper;
-    private final JwtService jwtService;
+  private final ImageService imageService;
+  private final ImageMapper imageMapper;
+  private final JwtService jwtService;
 
-    @Operation(summary = "Загрузка нового изображения в систему", operationId = "uploadImage")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Успех выполнения операции",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UploadImageResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Файл не прошел валидацию",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UiSuccessContainer.class))),
-            @ApiResponse(responseCode = "500", description = "Непредвиденная ошибка",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UiSuccessContainer.class)))
-    })
-    @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public UploadImageResponse uploadImage(@RequestParam MultipartFile file,
-                                           @RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken) throws Exception {
-        var jwtToken = bearerToken.substring("Bearer ".length());
-        var authorUsername = jwtService.getUsernameFromToken(jwtToken);
+  /**
+   * Upload image.
+   *
+   * @param file image
+   * @param bearerToken jwt token
+   * @return UploadImageResponse
+   * @throws Exception when some went wrong
+   */
+  @Operation(summary = "Загрузка нового изображения в систему", operationId = "uploadImage")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Успех выполнения операции",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema = @Schema(implementation = UploadImageResponse.class))),
+          @ApiResponse(responseCode = "400", description = "Файл не прошел валидацию",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema = @Schema(implementation = UiSuccessContainer.class))),
+          @ApiResponse(responseCode = "500", description = "Непредвиденная ошибка",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema = @Schema(implementation = UiSuccessContainer.class)))
+        })
 
-        return imageMapper.imageToUploadImageResponse(imageService.uploadImage(file, authorUsername));
-    }
+  @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public UploadImageResponse uploadImage(
+          @RequestParam MultipartFile file,
+          @RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken) throws Exception {
+    var jwtToken = bearerToken.substring("Bearer ".length());
+    var authorUsername = jwtService.getUsernameFromToken(jwtToken);
+    return imageMapper.imageToUploadImageResponse(imageService.uploadImage(file, authorUsername));
+  }
 
-    @Operation(summary = "Скачивание файла по ИД", operationId = "downloadImage")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Успех выполнения операции",
-                    content = @Content(mediaType = MediaType.ALL_VALUE)),
-            @ApiResponse(responseCode = "404", description = "Файл не найден в системе или недоступен",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UiSuccessContainer.class))),
-            @ApiResponse(responseCode = "500", description = "Непредвиденная ошибка",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UiSuccessContainer.class)))
-    })
-    @GetMapping(value = "/image/{image-id}")
-    public String downloadImage(@PathVariable("image-id") UUID imageId,
-                                @RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken) throws Exception {
-        var jwtToken = bearerToken.substring("Bearer ".length());
-        var authorUsername = jwtService.getUsernameFromToken(jwtToken);
+  /**
+   * Download image.
+   *
+   * @param imageId image id
+   * @param bearerToken jwt token
+   * @return image bytes in string utf-8 format
+   * @throws Exception when some went wrong
+   */
+  @Operation(summary = "Скачивание файла по ИД", operationId = "downloadImage")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Успех выполнения операции",
+                  content = @Content(mediaType = MediaType.ALL_VALUE)),
+          @ApiResponse(responseCode = "404",
+                  description = "Файл не найден в системе или недоступен",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema = @Schema(implementation = UiSuccessContainer.class))),
+          @ApiResponse(responseCode = "500", description = "Непредвиденная ошибка",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema = @Schema(implementation = UiSuccessContainer.class)))
+        })
 
-        return new String(imageService.downloadImage(imageId.toString(), authorUsername), StandardCharsets.UTF_8);
-    }
+  @GetMapping(value = "/image/{image-id}")
+  public String downloadImage(
+          @PathVariable("image-id") UUID imageId,
+          @RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken) throws Exception {
+    var jwtToken = bearerToken.substring("Bearer ".length());
+    var authorUsername = jwtService.getUsernameFromToken(jwtToken);
 
-    @Operation(summary = "Удаление файла по ИД", operationId = "deleteImage")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Успех выполнения операции",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UiSuccessContainer.class))),
-            @ApiResponse(responseCode = "404", description = "Файл не найден в системе или недоступен",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UiSuccessContainer.class))),
-            @ApiResponse(responseCode = "500", description = "Непредвиденная ошибка",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UiSuccessContainer.class)))
-    })
-    @DeleteMapping(value = "/image/{image-id}")
-    public UiSuccessContainer deleteImage(@PathVariable("image-id") String imageId,
-                                          @RequestHeader(HttpHeaders.AUTHORIZATION)
-                                          String bearerToken) throws Exception {
-        var jwtToken = bearerToken.substring("Bearer ".length());
-        var authorUsername = jwtService.getUsernameFromToken(jwtToken);
-        var imageIdUuid = UUID.fromString(imageId);
+    return new String(imageService.downloadImage(imageId.toString(), authorUsername),
+            StandardCharsets.UTF_8);
+  }
 
-        imageService.deleteImage(imageIdUuid.toString(), authorUsername);
+  /**
+   * Delete image.
+   *
+   * @param imageId image id
+   * @param bearerToken jwt token
+   * @return UiSuccessContainer
+   * @throws Exception when some went wrong
+   */
+  @Operation(summary = "Удаление файла по ИД", operationId = "deleteImage")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Успех выполнения операции",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema = @Schema(implementation = UiSuccessContainer.class))),
+          @ApiResponse(responseCode = "404",
+                  description = "Файл не найден в системе или недоступен",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema = @Schema(implementation = UiSuccessContainer.class))),
+          @ApiResponse(responseCode = "500", description = "Непредвиденная ошибка",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema = @Schema(implementation = UiSuccessContainer.class)))
+        })
+  @DeleteMapping(value = "/image/{image-id}")
+  public UiSuccessContainer deleteImage(@PathVariable("image-id") String imageId,
+                                        @RequestHeader(HttpHeaders.AUTHORIZATION)
+                                        String bearerToken) throws Exception {
+    var jwtToken = bearerToken.substring("Bearer ".length());
+    var authorUsername = jwtService.getUsernameFromToken(jwtToken);
+    var imageIdUuid = UUID.fromString(imageId);
 
-        return new UiSuccessContainer();
-    }
+    imageService.deleteImage(imageIdUuid.toString(), authorUsername);
 
-    @Operation(summary = "Получение списка изображений, которые доступны пользователю", operationId = "getImages")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Успех выполнения операции",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = GetImagesResponse.class))),
-            @ApiResponse(responseCode = "500", description = "Непредвиденная ошибка",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UiSuccessContainer.class)))
-    })
-    @GetMapping(value = "/images")
-    public GetImagesResponse getImages(@RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken) {
-        var jwtToken = bearerToken.substring("Bearer ".length());
-        var authorUsername = jwtService.getUsernameFromToken(jwtToken);
+    return new UiSuccessContainer();
+  }
 
-        return imageMapper.imagesToGetImagesResponse(imageService.getUserImages(authorUsername));
-    }
+  /**
+   * Get user images.
+   *
+   * @param bearerToken jwt token
+   * @return GetImagesResponse
+   */
+  @Operation(summary = "Получение списка изображений, которые доступны пользователю",
+          operationId = "getImages")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Успех выполнения операции",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema = @Schema(implementation = GetImagesResponse.class))),
+          @ApiResponse(responseCode = "500", description = "Непредвиденная ошибка",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema = @Schema(implementation = UiSuccessContainer.class)))
+        })
+  @GetMapping(value = "/images")
+  public GetImagesResponse getImages(@RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken) {
+    var jwtToken = bearerToken.substring("Bearer ".length());
+    var authorUsername = jwtService.getUsernameFromToken(jwtToken);
+
+    return imageMapper.imagesToGetImagesResponse(imageService.getUserImages(authorUsername));
+  }
 }
