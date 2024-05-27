@@ -30,7 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 @RestController
-@Tag(name = "ImageController", description = "Базовый CRUD API для работы с картинками")
+@Tag(name = "Image Controller", description = "Базовый CRUD API для работы с картинками")
 @RequestMapping("/api/v1")
 @SecurityRequirement(name = "bearerAuth")
 @RequiredArgsConstructor

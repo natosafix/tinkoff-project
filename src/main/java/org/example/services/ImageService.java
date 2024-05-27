@@ -18,7 +18,7 @@ public class ImageService {
   private final UserService userService;
   private final ImageRepository imageRepository;
 
-  private Image getImage(String imageId) {
+  public Image getImage(String imageId) {
     return imageRepository.findById(imageId).orElseThrow(() -> new ImageNotFoundException(imageId));
   }
 

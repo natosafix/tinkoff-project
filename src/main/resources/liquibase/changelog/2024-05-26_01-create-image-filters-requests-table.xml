@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="create-image-filters-requests-table" author="natosafix">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="image_filters_requests"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="image_filters_requests">
+            <column name="request_id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="source_image_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="filtered_image_id" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="status" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="image_filters_requests"
+                baseColumnNames="source_image_id"
+                constraintName="image_filters_requests_images_source_image_id_fk"
+                referencedTableName="images"
+                referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint
+                baseTableName="image_filters_requests"
+                baseColumnNames="filtered_image_id"
+                constraintName="image_filters_requests_images_filtered_image_id_fk"
+                referencedTableName="images"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog>
