@@ -20,7 +20,6 @@
         <module>api</module>
         <module>black-white-filter</module>
         <module>common</module>
-        <module>filters-common</module>
     </modules>
 
     <properties>

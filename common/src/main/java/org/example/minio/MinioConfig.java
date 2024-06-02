@@ -1,4 +1,4 @@
-package org.example.config;
+package org.example.minio;
 
 import io.minio.MinioClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

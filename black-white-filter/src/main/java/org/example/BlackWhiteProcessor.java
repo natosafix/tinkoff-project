@@ -1,4 +1,4 @@
-package org.example.kafka;
+package org.example;
 
 import com.google.gson.Gson;
 
@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.example.kafka.KafkaDoneImage;
+import org.example.kafka.KafkaImageFiltersRequest;
+import org.example.kafka.KafkaProducer;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -14,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class FilterApplier {
+public class BlackWhiteProcessor {
   private final KafkaProducer kafkaProducer;
 
   /**

@@ -1,4 +1,4 @@
-package org.example.config;
+package org.example.minio;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,4 +1,4 @@
-package org.example.config;
+package org.example.kafka;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.NewTopic;

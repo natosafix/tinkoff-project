@@ -5,7 +5,7 @@ import org.example.domain.User;
 import org.example.exceptions.ForbiddenException;
 import org.example.exceptions.ImageNotFoundException;
 import org.example.services.ImageService;
-import org.example.services.MinioService;
+import org.example.minio.MinioService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ public class ImageServiceTests extends ServiceTestsBase {
     var user = getTestUser();
     var image = addImageToUser(user);
     var file = new MockMultipartFile("name", image.getFilename(), "image/png", new byte[0]);
-    doReturn(image).when(minioService).uploadImage(file);
+    doReturn(image.getImageId()).when(minioService).uploadImage(file);
 
     var imageActual = imageService.uploadImage(file, user.getUsername());
 

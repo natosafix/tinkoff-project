@@ -1,4 +1,4 @@
-package org.example.services;
+package org.example.minio;
 
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
@@ -6,8 +6,6 @@ import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.compress.utils.IOUtils;
-import org.example.config.MinioProperties;
-import org.example.domain.Image;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,7 +40,7 @@ public class MinioService {
    * @return image
    * @throws Exception when some went wrong
    */
-  public Image uploadImage(MultipartFile file) throws Exception {
+  public UUID uploadImage(MultipartFile file) throws Exception {
     var id = UUID.randomUUID();
 
     client.putObject(
@@ -54,10 +52,7 @@ public class MinioService {
                     .build()
     );
 
-    return new Image()
-            .setImageId(id)
-            .setFilename(file.getOriginalFilename())
-            .setSize(file.getSize());
+    return id;
   }
 
   /**

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.domain.Image;
 import org.example.exceptions.ForbiddenException;
 import org.example.exceptions.ImageNotFoundException;
+import org.example.minio.MinioService;
 import org.example.repositories.ImageRepository;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
@@ -62,7 +63,11 @@ public class ImageService {
    */
   public Image uploadImage(MultipartFile file, String authorUsername) throws Exception {
     var user = userService.getUserByUsername(authorUsername);
-    var image = minioService.uploadImage(file);
+    var imageId = minioService.uploadImage(file);
+    var image = new Image()
+            .setImageId(imageId)
+            .setFilename(file.getOriginalFilename())
+            .setSize(file.getSize());
 
     image.setUser(user);
     imageRepository.save(image);
