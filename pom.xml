@@ -23,6 +23,7 @@
         <module>blur-filter</module>
         <module>inverse-color-filter</module>
         <module>kuwahara-filter</module>
+        <module>immaga-filter</module>
     </modules>
 
     <properties>
