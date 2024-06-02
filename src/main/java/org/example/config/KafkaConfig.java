@@ -5,8 +5,6 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.RoundRobinPartitioner;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.example.kafka.KafkaDoneImage;
-import org.example.kafka.KafkaImageFiltersRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
@@ -37,12 +35,12 @@ public class KafkaConfig {
     }
 
     @Bean(WIP_KAFKA_TEMPLATE)
-    public KafkaTemplate<String, KafkaImageFiltersRequest> wipKafkaTemplate() {
+    public KafkaTemplate<String, String> wipKafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean(DONE_KAFKA_TEMPLATE)
-    public KafkaTemplate<String, KafkaDoneImage> doneKafkaTemplate() {
+    public KafkaTemplate<String, String> doneKafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 

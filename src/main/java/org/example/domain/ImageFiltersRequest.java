@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.util.UUID;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -14,7 +16,7 @@ public class ImageFiltersRequest {
 
     @Id
     @Column(name = "request_id")
-    private String requestId;
+    private UUID requestId;
 
     @ManyToOne
     @JoinColumn(name = "source_image_id", referencedColumnName = "id")

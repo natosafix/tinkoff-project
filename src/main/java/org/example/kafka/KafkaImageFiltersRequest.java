@@ -5,11 +5,12 @@ import lombok.Data;
 import org.example.domain.Filter;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 public class KafkaImageFiltersRequest implements Serializable {
     private String imageId;
-    private String requestId;
+    private UUID requestId;
     private Filter[] filters;
 }

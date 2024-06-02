@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 @Schema(requiredProperties = {"filename", "size"}, type = "object")
 @Data
@@ -22,7 +23,7 @@ public class Image implements Serializable {
   @Schema(type = "string", format = "uuid", description = "ИД файла")
   @Id
   @Column(name = "id")
-  private String imageId;
+  private UUID imageId;
 
   @Schema(type = "string", description = "Название изображения")
   @Column(name = "filename", length = 100)

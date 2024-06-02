@@ -51,9 +51,9 @@ public class ImageServiceTests extends ServiceTestsBase {
     var user = getTestUser();
     var image = addImageToUser(user);
     var imageBytes = new byte[]{0, 1};
-    doReturn(imageBytes).when(minioService).downloadImage(image.getImageId());
+    doReturn(imageBytes).when(minioService).downloadImage(image.getImageId().toString());
 
-    var imageBytesActual = imageService.downloadImage(image.getImageId(), user.getUsername());
+    var imageBytesActual = imageService.downloadImage(image.getImageId().toString(), user.getUsername());
 
     assertEquals(imageBytes, imageBytesActual);
   }
@@ -64,9 +64,9 @@ public class ImageServiceTests extends ServiceTestsBase {
     var otherUser = getTestUser();
     var image = addImageToUser(user);
     var imageBytes = new byte[]{0, 1};
-    doReturn(imageBytes).when(minioService).downloadImage(image.getImageId());
+    doReturn(imageBytes).when(minioService).downloadImage(image.getImageId().toString());
 
-    Executable action = () -> imageService.downloadImage(image.getImageId(), otherUser.getUsername());
+    Executable action = () -> imageService.downloadImage(image.getImageId().toString(), otherUser.getUsername());
 
     assertThrows(ForbiddenException.class, action, "Недостаточно прав для использования ресурса");
   }
@@ -108,9 +108,9 @@ public class ImageServiceTests extends ServiceTestsBase {
   public void deleteImage_ShouldDelete() throws Exception {
     var user = getTestUser();
     var image = addImageToUser(user);
-    doNothing().when(minioService).deleteImage(image.getImageId());
+    doNothing().when(minioService).deleteImage(image.getImageId().toString());
 
-    imageService.deleteImage(image.getImageId(), user.getUsername());
+    imageService.deleteImage(image.getImageId().toString(), user.getUsername());
 
     assertFalse(imageRepository.findById(image.getImageId()).isPresent());
   }
@@ -120,9 +120,9 @@ public class ImageServiceTests extends ServiceTestsBase {
     var user = getTestUser();
     var otherUser = getTestUser();
     var image = addImageToUser(user);
-    doNothing().when(minioService).deleteImage(image.getImageId());
+    doNothing().when(minioService).deleteImage(image.getImageId().toString());
 
-    Executable action = () -> imageService.deleteImage(image.getImageId(), otherUser.getUsername());
+    Executable action = () -> imageService.deleteImage(image.getImageId().toString(), otherUser.getUsername());
 
     assertThrows(ForbiddenException.class, action, "Недостаточно прав для использования ресурса");
   }
@@ -140,7 +140,7 @@ public class ImageServiceTests extends ServiceTestsBase {
 
   private Image addImageToUser(User user) {
     var image = new Image()
-            .setImageId(UUID.randomUUID().toString())
+            .setImageId(UUID.randomUUID())
             .setFilename(UUID.randomUUID().toString())
             .setSize(10L)
             .setUser(user);

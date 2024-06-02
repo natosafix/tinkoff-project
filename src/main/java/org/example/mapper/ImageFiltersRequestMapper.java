@@ -18,9 +18,9 @@ public interface ImageFiltersRequestMapper {
     @Named("getActualImageId")
     default String getActualImageId(ImageFiltersRequest imageFiltersRequest) {
         if (imageFiltersRequest.getFilteredImage() == null) {
-            return imageFiltersRequest.getSourceImage().getImageId();
+            return imageFiltersRequest.getSourceImage().getImageId().toString();
         }
 
-        return imageFiltersRequest.getFilteredImage().getImageId();
+        return imageFiltersRequest.getFilteredImage().getImageId().toString();
     }
 }

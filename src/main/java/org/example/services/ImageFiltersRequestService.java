@@ -1,5 +1,6 @@
 package org.example.services;
 
+import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import org.example.domain.*;
 import org.example.exceptions.ImageFiltersRequestNotFoundException;
@@ -24,16 +25,17 @@ public class ImageFiltersRequestService {
         var user = userService.getUserByUsername(username);
         var image = imageService.getImage(sourceImageId);
         checkUserAccess(user.getId(), image);
-        return repository.findById(requestId).orElseThrow(() -> new ImageFiltersRequestNotFoundException(requestId));
+        return repository.findById(UUID.fromString(requestId)).orElseThrow(() -> new ImageFiltersRequestNotFoundException(requestId));
     }
 
     public ImageFiltersRequest apply(String sourceImageId, String[] filters, String username) {
-        var requestId = UUID.randomUUID().toString();
+        var requestId = UUID.randomUUID();
         var user = userService.getUserByUsername(username);
         var image = imageService.getImage(sourceImageId);
         checkUserAccess(user.getId(), image);
         var request = repository.save(new ImageFiltersRequest().setRequestId(requestId).setSourceImage(image).setStatus(Status.WIP));
-        kafkaProducer.send(new KafkaImageFiltersRequest(sourceImageId,  requestId, Arrays.stream(filters).map(f -> Filter.valueOf(f)).toArray(Filter[]::new)));
+        var kafkaRequest = new KafkaImageFiltersRequest(sourceImageId, requestId, Arrays.stream(filters).map(Filter::valueOf).toArray(Filter[]::new));
+        kafkaProducer.sendWip(new Gson().toJson(kafkaRequest));
         return request;
     }
 
@@ -41,7 +43,7 @@ public class ImageFiltersRequestService {
         var imageOwnerId = image.getUser().getId();
 
         if (!imageOwnerId.equals(currentUserId)) {
-            throw new ImageNotFoundException(image.getImageId());
+            throw new ImageNotFoundException(image.getImageId().toString());
         }
     }
 }

@@ -55,7 +55,7 @@ public class MinioService {
     );
 
     return new Image()
-            .setImageId(id.toString())
+            .setImageId(id)
             .setFilename(file.getOriginalFilename())
             .setSize(file.getSize());
   }

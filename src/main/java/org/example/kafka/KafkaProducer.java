@@ -20,26 +20,26 @@ public class KafkaProducer {
     @Value("${application.kafka.topic-done}")
     private String topicDone;
 
-    private final KafkaTemplate<String, KafkaImageFiltersRequest> wipTemplate;
-    private final KafkaTemplate<String, KafkaDoneImage> doneTemplate;
+    private final KafkaTemplate<String, String> wipTemplate;
+    private final KafkaTemplate<String, String> doneTemplate;
 
     public KafkaProducer(
             @Qualifier(WIP_KAFKA_TEMPLATE)
-            KafkaTemplate<String, KafkaImageFiltersRequest> wipTemplate,
+            KafkaTemplate<String, String> wipTemplate,
 
             @Qualifier(DONE_KAFKA_TEMPLATE)
-            KafkaTemplate<String, KafkaDoneImage> doneTemplate
+            KafkaTemplate<String, String> doneTemplate
     ) {
         this.wipTemplate = wipTemplate;
         this.doneTemplate = doneTemplate;
     }
 
-    public void send(KafkaImageFiltersRequest message) {
+    public void sendWip(String message) {
         log.info("Отправляем сообщение {}", message);
         wipTemplate.send(topicWip, message);
     }
 
-    public void send(KafkaDoneImage message) {
+    public void sendDone(String message) {
         log.info("Отправляем сообщение {}", message);
         doneTemplate.send(topicDone, message);
     }
