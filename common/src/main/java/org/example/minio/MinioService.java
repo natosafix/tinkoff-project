@@ -1,14 +1,13 @@
 package org.example.minio;
 
-import io.minio.GetObjectArgs;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
-import io.minio.RemoveObjectArgs;
+import io.minio.*;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
+import java.util.HashMap;
 import java.util.UUID;
 
 @Service
@@ -55,6 +54,28 @@ public class MinioService {
     return id;
   }
 
+  public UUID uploadImage(byte[] image,
+                          StatObjectResponse metaInfo,
+                          boolean setTtl) throws Exception {
+    var id = UUID.randomUUID();
+    var tags = new HashMap<String, String>();
+    if (setTtl) {
+      tags.put("status", "wipImage");
+    }
+
+    var inputStream = new ByteArrayInputStream(image);
+    client.putObject(
+            PutObjectArgs.builder()
+                    .bucket(properties.getBucket())
+                    .object(id.toString())
+                    .stream(inputStream, image.length, properties.getImageSize())
+                    .tags(tags)
+                    .contentType(metaInfo.contentType())
+                    .build());
+
+    return id;
+  }
+
   /**
    * Delete image.
    *
@@ -64,6 +85,14 @@ public class MinioService {
   public void deleteImage(String id) throws Exception {
     client.removeObject(
             RemoveObjectArgs.builder()
+                    .bucket(properties.getBucket())
+                    .object(id)
+                    .build());
+  }
+
+  public StatObjectResponse getImageMeta(String id) throws Exception {
+    return client.statObject(
+            StatObjectArgs.builder()
                     .bucket(properties.getBucket())
                     .object(id)
                     .build());

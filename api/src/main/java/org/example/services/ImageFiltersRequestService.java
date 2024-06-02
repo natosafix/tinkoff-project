@@ -62,7 +62,10 @@ public class ImageFiltersRequestService {
             .setStatus(Status.WIP);
     request = repository.save(request);
     var filtersArray = Arrays.stream(filters).map(Filter::valueOf).toArray(Filter[]::new);
-    var kafkaRequest = new KafkaImageFiltersRequest(sourceImageId, requestId, filtersArray);
+    var kafkaRequest = new KafkaImageFiltersRequest(
+            UUID.fromString(sourceImageId),
+            requestId,
+            filtersArray);
     kafkaProducer.sendWip(new Gson().toJson(kafkaRequest));
     return request;
   }

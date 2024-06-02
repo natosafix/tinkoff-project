@@ -1,7 +1,7 @@
 package org.example.domain;
 
 public enum Filter {
-    FIRST,
+    BlackWhite,
     SECOND,
     THIRD
 }
