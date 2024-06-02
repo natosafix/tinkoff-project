@@ -30,7 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 @RestController
-@Tag(name = "ImageController", description = "Базовый CRUD API для работы с картинками")
+@Tag(name = "Image Controller", description = "Базовый CRUD API для работы с картинками")
 @RequestMapping("/api/v1")
 @SecurityRequirement(name = "bearerAuth")
 @RequiredArgsConstructor
@@ -128,9 +128,8 @@ public class ImageResource {
                                         String bearerToken) throws Exception {
     var jwtToken = bearerToken.substring("Bearer ".length());
     var authorUsername = jwtService.getUsernameFromToken(jwtToken);
-    var imageIdUuid = UUID.fromString(imageId);
 
-    imageService.deleteImage(imageIdUuid.toString(), authorUsername);
+    imageService.deleteImage(imageId, authorUsername);
 
     return new UiSuccessContainer();
   }

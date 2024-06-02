@@ -18,6 +18,16 @@ spring:
     multipart:
       maxFileSize: 10485760
       maxRequestSize: 10485760
+  kafka:
+    listener.ack-mode: manual
+    bootstrap-servers:
+      - localhost:9092
+      - localhost:9093
+      - localhost:9094
+  cloud:
+    zookeeper:
+      config.enabled: false
+      connect-string: localhost:2181
 
 minio:
   url: http://localhost:9000
@@ -44,3 +54,9 @@ application:
     jwt:
       secret-key: AC13E9DC05A0195C9FE3CC6BC81E4729A20AC2DF0AD680A4FAD3D3F961C07F72
       expiration-timeout-milliseconds: 86400000
+  kafka:
+    topic-wip: images.wip
+    topic-done: images.done
+    partitions: 3
+    replicas: 3
+    group-id: custom-group-id

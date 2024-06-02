@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -18,8 +19,9 @@ public class ImageService {
   private final UserService userService;
   private final ImageRepository imageRepository;
 
-  private Image getImage(String imageId) {
-    return imageRepository.findById(imageId).orElseThrow(() -> new ImageNotFoundException(imageId));
+  public Image getImage(String imageId) {
+    return imageRepository.findById(UUID.fromString(imageId))
+            .orElseThrow(() -> new ImageNotFoundException(imageId));
   }
 
   /**
@@ -47,7 +49,7 @@ public class ImageService {
     var user = userService.getUserByUsername(authorUsername);
     checkUserAccess(user.getId(), image);
 
-    return minioService.downloadImage(image.getImageId());
+    return minioService.downloadImage(image.getImageId().toString());
   }
 
   /**
@@ -80,8 +82,8 @@ public class ImageService {
     var user = userService.getUserByUsername(authorUsername);
     checkUserAccess(user.getId(), image);
 
-    imageRepository.deleteById(imageId);
-    minioService.deleteImage(image.getImageId());
+    imageRepository.deleteById(UUID.fromString(imageId));
+    minioService.deleteImage(image.getImageId().toString());
   }
 
   private void checkUserAccess(int currentUserId, Image image) {
