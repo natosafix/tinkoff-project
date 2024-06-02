@@ -1,8 +1,12 @@
 package org.example.services;
 
 import com.google.gson.Gson;
+
 import lombok.RequiredArgsConstructor;
-import org.example.domain.*;
+import org.example.domain.Filter;
+import org.example.domain.Image;
+import org.example.domain.ImageFiltersRequest;
+import org.example.domain.Status;
 import org.example.exceptions.ImageFiltersRequestNotFoundException;
 import org.example.exceptions.ImageNotFoundException;
 import org.example.kafka.KafkaImageFiltersRequest;
@@ -16,34 +20,58 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ImageFiltersRequestService {
-    private final ImageFiltersRequestRepository repository;
-    private final UserService userService;
-    private final ImageService imageService;
-    private final KafkaProducer kafkaProducer;
+  private final ImageFiltersRequestRepository repository;
+  private final UserService userService;
+  private final ImageService imageService;
+  private final KafkaProducer kafkaProducer;
 
-    public ImageFiltersRequest get(String requestId, String sourceImageId, String username) {
-        var user = userService.getUserByUsername(username);
-        var image = imageService.getImage(sourceImageId);
-        checkUserAccess(user.getId(), image);
-        return repository.findById(UUID.fromString(requestId)).orElseThrow(() -> new ImageFiltersRequestNotFoundException(requestId));
+  /**
+   * Get ImageFiltersRequest.
+   *
+   * @param requestId requestId
+   * @param sourceImageId sourceImageId
+   * @param username username
+   *
+   * @return ImageFiltersRequest
+   */
+  public ImageFiltersRequest get(String requestId, String sourceImageId, String username) {
+    var user = userService.getUserByUsername(username);
+    var image = imageService.getImage(sourceImageId);
+    checkUserAccess(user.getId(), image);
+    return repository.findById(UUID.fromString(requestId))
+            .orElseThrow(() -> new ImageFiltersRequestNotFoundException(requestId));
+  }
+
+  /**
+   * Apply ImageFiltersRequest.
+   *
+   * @param sourceImageId sourceImageId
+   * @param filters filters
+   * @param username username
+   *
+   * @return ImageFiltersRequest
+   */
+  public ImageFiltersRequest apply(String sourceImageId, String[] filters, String username) {
+    var requestId = UUID.randomUUID();
+    var user = userService.getUserByUsername(username);
+    var image = imageService.getImage(sourceImageId);
+    checkUserAccess(user.getId(), image);
+    var request = new ImageFiltersRequest()
+            .setRequestId(requestId)
+            .setSourceImage(image)
+            .setStatus(Status.WIP);
+    request = repository.save(request);
+    var filtersArray = Arrays.stream(filters).map(Filter::valueOf).toArray(Filter[]::new);
+    var kafkaRequest = new KafkaImageFiltersRequest(sourceImageId, requestId, filtersArray);
+    kafkaProducer.sendWip(new Gson().toJson(kafkaRequest));
+    return request;
+  }
+
+  private void checkUserAccess(int currentUserId, Image image) {
+    var imageOwnerId = image.getUser().getId();
+
+    if (!imageOwnerId.equals(currentUserId)) {
+      throw new ImageNotFoundException(image.getImageId().toString());
     }
-
-    public ImageFiltersRequest apply(String sourceImageId, String[] filters, String username) {
-        var requestId = UUID.randomUUID();
-        var user = userService.getUserByUsername(username);
-        var image = imageService.getImage(sourceImageId);
-        checkUserAccess(user.getId(), image);
-        var request = repository.save(new ImageFiltersRequest().setRequestId(requestId).setSourceImage(image).setStatus(Status.WIP));
-        var kafkaRequest = new KafkaImageFiltersRequest(sourceImageId, requestId, Arrays.stream(filters).map(Filter::valueOf).toArray(Filter[]::new));
-        kafkaProducer.sendWip(new Gson().toJson(kafkaRequest));
-        return request;
-    }
-
-    private void checkUserAccess(int currentUserId, Image image) {
-        var imageOwnerId = image.getUser().getId();
-
-        if (!imageOwnerId.equals(currentUserId)) {
-            throw new ImageNotFoundException(image.getImageId().toString());
-        }
-    }
+  }
 }

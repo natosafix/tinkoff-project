@@ -20,7 +20,8 @@ public class ImageService {
   private final ImageRepository imageRepository;
 
   public Image getImage(String imageId) {
-    return imageRepository.findById(UUID.fromString(imageId)).orElseThrow(() -> new ImageNotFoundException(imageId));
+    return imageRepository.findById(UUID.fromString(imageId))
+            .orElseThrow(() -> new ImageNotFoundException(imageId));
   }
 
   /**

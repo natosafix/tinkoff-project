@@ -16,79 +16,94 @@ import org.example.services.ImageFiltersRequestService;
 import org.example.services.JwtService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@Tag(name = "Image Filters Controller", description = "Базовый CRUD API для работы с пользовательскими запросами на редактирование картинок")
+@Tag(name = "Image Filters Controller",
+        description = "Базовый CRUD API для работы с "
+                      + "пользовательскими запросами на редактирование картинок")
 @RequestMapping("/api/v1")
 @SecurityRequirement(name = "bearerAuth")
 @RequiredArgsConstructor
 public class ImageFiltersResource {
-    private final JwtService jwtService;
-    private final ImageFiltersRequestService service;
-    private final ImageFiltersRequestMapper mapper;
+  private final JwtService jwtService;
+  private final ImageFiltersRequestService service;
+  private final ImageFiltersRequestMapper mapper;
 
-    /**
-     * Apply filters to image
-     *
-     * @param imageId image id
-     * @param filters filters
-     * @param bearerToken jwt token
-     * @return ApplyImageFiltersResponse
-     * @throws Exception when some went wrong
-     */
-    @Operation(summary = "Применение указанных фильтров к изображению", operationId = "applyImageFilters")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Успех выполнения операции",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ApplyImageFiltersResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Файл не найден в системе или недоступен",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UiSuccessContainer.class))),
-            @ApiResponse(responseCode = "500", description = "Непредвиденная ошибка",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UiSuccessContainer.class)))
-    })
+  /**
+   * Apply filters to image.
+   *
+   * @param imageId     image id
+   * @param filters     filters
+   * @param bearerToken jwt token
+   * @return ApplyImageFiltersResponse
+   * @throws Exception when some went wrong
+   */
+  @Operation(summary = "Применение указанных фильтров к изображению",
+          operationId = "applyImageFilters")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Успех выполнения операции",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema = @Schema(implementation = ApplyImageFiltersResponse.class))),
+          @ApiResponse(responseCode = "404",
+                  description = "Файл не найден в системе или недоступен",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema = @Schema(implementation = UiSuccessContainer.class))),
+          @ApiResponse(responseCode = "500", description = "Непредвиденная ошибка",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema = @Schema(implementation = UiSuccessContainer.class)))
+      })
 
-    @PostMapping(value = "/image/{image-id}/filters/apply")
-    public ApplyImageFiltersResponse applyImageFilters(
-            @PathVariable("image-id") String imageId,
-            @RequestParam String[] filters,
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken) throws Exception {
-        var jwtToken = bearerToken.substring("Bearer ".length());
-        var authorUsername = jwtService.getUsernameFromToken(jwtToken);
-        return mapper.imageFiltersRequestToApplyImageFiltersResponse(service.apply(imageId, filters, authorUsername));
-    }
+  @PostMapping(value = "/image/{image-id}/filters/apply")
+  public ApplyImageFiltersResponse applyImageFilters(
+          @PathVariable("image-id") String imageId,
+          @RequestParam String[] filters,
+          @RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken) throws Exception {
+    var jwtToken = bearerToken.substring("Bearer ".length());
+    var authorUsername = jwtService.getUsernameFromToken(jwtToken);
+    var request = service.apply(imageId, filters, authorUsername);
+    return mapper.imageFiltersRequestToApplyImageFiltersResponse(request);
+  }
 
-    /**
-     * Get filters request status
-     *
-     * @param imageId source image
-     * @param requestId filters request id
-     * @param bearerToken jwt token
-     * @return GetModifiedImageByRequestIdResponse
-     * @throws Exception when some went wrong
-     */
-    @Operation(summary = "Получение ИД измененного файла по ИД запроса", operationId = "getModifiedImageByRequestId")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Успех выполнения операции",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = GetModifiedImageByRequestIdResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Файл не найден в системе или недоступен",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UiSuccessContainer.class))),
-            @ApiResponse(responseCode = "500", description = "Непредвиденная ошибка",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UiSuccessContainer.class)))
-    })
+  /**
+   * Get filters request status.
+   *
+   * @param imageId     source image
+   * @param requestId   filters request id
+   * @param bearerToken jwt token
+   * @return GetModifiedImageByRequestIdResponse
+   * @throws Exception when some went wrong
+   */
+  @Operation(summary = "Получение ИД измененного файла по ИД запроса",
+          operationId = "getModifiedImageByRequestId")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Успех выполнения операции",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema =
+                          @Schema(implementation = GetModifiedImageByRequestIdResponse.class))),
+          @ApiResponse(responseCode = "404",
+                  description = "Файл не найден в системе или недоступен",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema = @Schema(implementation = UiSuccessContainer.class))),
+          @ApiResponse(responseCode = "500", description = "Непредвиденная ошибка",
+                  content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                          schema = @Schema(implementation = UiSuccessContainer.class)))
+      })
 
-    @GetMapping(value = "/image/{image-id}/filters/{request-id}")
-    public GetModifiedImageByRequestIdResponse getModifiedImageByRequestId(
-            @PathVariable("image-id") String imageId,
-            @PathVariable("request-id") String requestId,
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken) throws Exception {
-        var jwtToken = bearerToken.substring("Bearer ".length());
-        var authorUsername = jwtService.getUsernameFromToken(jwtToken);
-        return mapper.imageFiltersRequestToGetModifiedImageByRequestId(service.get(requestId, imageId, authorUsername));
-    }
+  @GetMapping(value = "/image/{image-id}/filters/{request-id}")
+  public GetModifiedImageByRequestIdResponse getModifiedImageByRequestId(
+          @PathVariable("image-id") String imageId,
+          @PathVariable("request-id") String requestId,
+          @RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken) throws Exception {
+    var jwtToken = bearerToken.substring("Bearer ".length());
+    var authorUsername = jwtService.getUsernameFromToken(jwtToken);
+    var request = service.get(requestId, imageId, authorUsername);
+    return mapper.imageFiltersRequestToGetModifiedImageByRequestId(request);
+  }
 }

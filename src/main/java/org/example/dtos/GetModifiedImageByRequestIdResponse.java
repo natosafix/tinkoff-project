@@ -9,9 +9,10 @@ import lombok.Data;
 @AllArgsConstructor
 public class GetModifiedImageByRequestIdResponse {
 
-    @Schema(type = "string", format = "uuid", description = "ИД модифицированного или оригинального файла в случае отсутствия первого")
-    String imageId;
+  @Schema(type = "string", format = "uuid",
+          description = "ИД модифицированного или оригинального файла в случае отсутствия первого")
+  String imageId;
 
-    @Schema(type = "string", format = "uuid", description = "Статус обработки файла")
-    String status;
+  @Schema(type = "string", format = "uuid", description = "Статус обработки файла")
+  String status;
 }

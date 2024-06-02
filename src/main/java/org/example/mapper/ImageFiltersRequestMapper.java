@@ -10,17 +10,25 @@ import org.mapstruct.Named;
 @Mapper(componentModel = "spring")
 public interface ImageFiltersRequestMapper {
 
-    ApplyImageFiltersResponse imageFiltersRequestToApplyImageFiltersResponse(ImageFiltersRequest imageFiltersRequest);
+  ApplyImageFiltersResponse imageFiltersRequestToApplyImageFiltersResponse(
+          ImageFiltersRequest imageFiltersRequest);
 
-    @Mapping(target = "imageId", source = "imageFiltersRequest", qualifiedByName = "getActualImageId")
-    GetModifiedImageByRequestIdResponse imageFiltersRequestToGetModifiedImageByRequestId(ImageFiltersRequest imageFiltersRequest);
+  @Mapping(target = "imageId", source = "imageFiltersRequest", qualifiedByName = "getActualImageId")
+  GetModifiedImageByRequestIdResponse imageFiltersRequestToGetModifiedImageByRequestId(
+          ImageFiltersRequest imageFiltersRequest);
 
-    @Named("getActualImageId")
-    default String getActualImageId(ImageFiltersRequest imageFiltersRequest) {
-        if (imageFiltersRequest.getFilteredImage() == null) {
-            return imageFiltersRequest.getSourceImage().getImageId().toString();
-        }
-
-        return imageFiltersRequest.getFilteredImage().getImageId().toString();
+  /**
+   * Actual image id.
+   *
+   * @param imageFiltersRequest imageFiltersRequest
+   * @return actual image id
+   */
+  @Named("getActualImageId")
+  default String getActualImageId(ImageFiltersRequest imageFiltersRequest) {
+    if (imageFiltersRequest.getFilteredImage() == null) {
+      return imageFiltersRequest.getSourceImage().getImageId().toString();
     }
+
+    return imageFiltersRequest.getFilteredImage().getImageId().toString();
+  }
 }

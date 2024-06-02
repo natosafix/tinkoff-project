@@ -9,6 +9,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class ApplyImageFiltersResponse {
 
-    @Schema(type = "string", format = "uuid", description = "ИД запроса в системе")
-    String requestId;
+  @Schema(type = "string", format = "uuid", description = "ИД запроса в системе")
+  String requestId;
 }

@@ -10,7 +10,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 public class KafkaImageFiltersRequest implements Serializable {
-    private String imageId;
-    private UUID requestId;
-    private Filter[] filters;
+  private String imageId;
+  private UUID requestId;
+  private Filter[] filters;
 }
