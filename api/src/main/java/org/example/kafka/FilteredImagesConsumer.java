@@ -15,8 +15,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -54,6 +52,7 @@ public class FilteredImagesConsumer {
             .setSize(meta.size())
             .setUser(request.getSourceImage().getUser())
             .setFilename("filtered_image");
+    imageRepository.save(filteredImage);
     request.setFilteredImage(filteredImage);
     request.setStatus(Status.DONE);
     repository.save(request);
