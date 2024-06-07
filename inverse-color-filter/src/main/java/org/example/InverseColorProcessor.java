@@ -17,6 +17,7 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -29,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ReflectionProcessor {
+public class InverseColorProcessor {
   private final KafkaProducer kafkaProducer;
   private final ProcessedImageRepository repository;
   private final MinioService minioService;
@@ -56,7 +57,7 @@ public class ReflectionProcessor {
     log.info("Получено следующее сообщение из топика {}:\nkey: {},\nvalue: {}",
             record.topic(), record.key(), request);
 
-    if (request.getFilters()[0] != Filter.Reflection) {
+    if (request.getFilters()[0] != Filter.InverseColor) {
       acknowledgment.acknowledge();
       return;
     }
@@ -95,25 +96,18 @@ public class ReflectionProcessor {
     var originalImage = ImageIO.read(inputStream);
     var width = originalImage.getWidth();
     var height = originalImage.getHeight();
-    var reflectedImage = new BufferedImage(width * 2, height, originalImage.getType());
+    var invertedImage = new BufferedImage(width, height, originalImage.getType());
 
     var numThreads = Runtime.getRuntime().availableProcessors();
     var executor = Executors.newFixedThreadPool(numThreads);
 
-    for (int y = 0; y < height; y++) {
-      final var finalY = y;
-      executor.submit(() -> {
-        for (int x = 0; x < width; x++) {
-          reflectedImage.setRGB(x, finalY, originalImage.getRGB(x, finalY));
-        }
-      });
-    }
-
-    for (int y = 0; y < height; y++) {
-      final var finalY = y;
-      executor.submit(() -> {
-        for (int x = 0; x < width; x++) {
-          reflectedImage.setRGB(width + x, finalY, originalImage.getRGB(width - 1 - x, finalY));
+    for (var y = 0; y < height; y++) {
+      var finalY = y;
+      executor.execute(() -> {
+        for (var x = 0; x < width; x++) {
+          var color = new Color(originalImage.getRGB(x, finalY));
+          var newColor = new Color(255 - color.getRed(), 255 - color.getGreen(), 255 - color.getBlue());
+          invertedImage.setRGB(x, finalY, newColor.getRGB());
         }
       });
     }
@@ -122,7 +116,7 @@ public class ReflectionProcessor {
     executor.awaitTermination(1, TimeUnit.HOURS);
 
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    ImageIO.write(reflectedImage, contentType, outputStream);
+    ImageIO.write(invertedImage, contentType, outputStream);
     return outputStream.toByteArray();
   }
 }

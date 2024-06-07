@@ -17,6 +17,7 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -29,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ReflectionProcessor {
+public class BlurProcessor {
   private final KafkaProducer kafkaProducer;
   private final ProcessedImageRepository repository;
   private final MinioService minioService;
@@ -56,7 +57,7 @@ public class ReflectionProcessor {
     log.info("Получено следующее сообщение из топика {}:\nkey: {},\nvalue: {}",
             record.topic(), record.key(), request);
 
-    if (request.getFilters()[0] != Filter.Reflection) {
+    if (request.getFilters()[0] != Filter.Blur) {
       acknowledgment.acknowledge();
       return;
     }
@@ -95,25 +96,42 @@ public class ReflectionProcessor {
     var originalImage = ImageIO.read(inputStream);
     var width = originalImage.getWidth();
     var height = originalImage.getHeight();
-    var reflectedImage = new BufferedImage(width * 2, height, originalImage.getType());
+    var blurredImage = new BufferedImage(width, height, originalImage.getType());
 
     var numThreads = Runtime.getRuntime().availableProcessors();
     var executor = Executors.newFixedThreadPool(numThreads);
 
+    var radius = 9;
     for (int y = 0; y < height; y++) {
-      final var finalY = y;
+      var finalY = y;
       executor.submit(() -> {
         for (int x = 0; x < width; x++) {
-          reflectedImage.setRGB(x, finalY, originalImage.getRGB(x, finalY));
-        }
-      });
-    }
+          int a = 0, r = 0, g = 0, b = 0;
+          int count = 0;
 
-    for (int y = 0; y < height; y++) {
-      final var finalY = y;
-      executor.submit(() -> {
-        for (int x = 0; x < width; x++) {
-          reflectedImage.setRGB(width + x, finalY, originalImage.getRGB(width - 1 - x, finalY));
+          for (int dy = -radius; dy <= radius; dy++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+              int ix = x + dx;
+              int iy = finalY + dy;
+
+              if (ix >= 0 && ix < width && iy >= 0 && iy < height) {
+                var rgb = new Color(originalImage.getRGB(ix, iy));
+                a += rgb.getAlpha();
+                r += rgb.getRed();
+                g += rgb.getGreen();
+                b += rgb.getBlue();
+                count++;
+              }
+            }
+          }
+
+          int newA = a / count;
+          int newR = r / count;
+          int newG = g / count;
+          int newB = b / count;
+
+          var blurredRgb = new Color(newR, newG, newB, newA);
+          blurredImage.setRGB(x, finalY, blurredRgb.getRGB());
         }
       });
     }
@@ -122,7 +140,7 @@ public class ReflectionProcessor {
     executor.awaitTermination(1, TimeUnit.HOURS);
 
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    ImageIO.write(reflectedImage, contentType, outputStream);
+    ImageIO.write(blurredImage, contentType, outputStream);
     return outputStream.toByteArray();
   }
 }

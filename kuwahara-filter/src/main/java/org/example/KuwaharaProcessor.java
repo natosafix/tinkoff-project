@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.checkerframework.checker.units.qual.C;
 import org.example.domain.Filter;
 import org.example.kafka.KafkaDoneImage;
 import org.example.kafka.KafkaImageFiltersRequest;
@@ -17,6 +18,7 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -29,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ReflectionProcessor {
+public class KuwaharaProcessor {
   private final KafkaProducer kafkaProducer;
   private final ProcessedImageRepository repository;
   private final MinioService minioService;
@@ -56,7 +58,7 @@ public class ReflectionProcessor {
     log.info("Получено следующее сообщение из топика {}:\nkey: {},\nvalue: {}",
             record.topic(), record.key(), request);
 
-    if (request.getFilters()[0] != Filter.Reflection) {
+    if (request.getFilters()[0] != Filter.Kuwahara) {
       acknowledgment.acknowledge();
       return;
     }
@@ -95,34 +97,78 @@ public class ReflectionProcessor {
     var originalImage = ImageIO.read(inputStream);
     var width = originalImage.getWidth();
     var height = originalImage.getHeight();
-    var reflectedImage = new BufferedImage(width * 2, height, originalImage.getType());
+    BufferedImage filteredImage = new BufferedImage(width, height, originalImage.getType());
+
+    int radius = 4;
 
     var numThreads = Runtime.getRuntime().availableProcessors();
     var executor = Executors.newFixedThreadPool(numThreads);
 
-    for (int y = 0; y < height; y++) {
-      final var finalY = y;
-      executor.submit(() -> {
-        for (int x = 0; x < width; x++) {
-          reflectedImage.setRGB(x, finalY, originalImage.getRGB(x, finalY));
-        }
-      });
-    }
+    for (int y = radius; y < height - radius; y++) {
+      for (int x = radius; x < width - radius; x++) {
+        int[][] regions = new int[4][(radius + 1) * (radius + 1)];
+        int[] regionSizes = new int[4];
 
-    for (int y = 0; y < height; y++) {
-      final var finalY = y;
-      executor.submit(() -> {
-        for (int x = 0; x < width; x++) {
-          reflectedImage.setRGB(width + x, finalY, originalImage.getRGB(width - 1 - x, finalY));
-        }
-      });
-    }
+        int[] sumR = new int[4];
+        int[] sumG = new int[4];
+        int[] sumB = new int[4];
+        int[] sumA = new int[4];
 
-    executor.shutdown();
-    executor.awaitTermination(1, TimeUnit.HOURS);
+        var regionCount = 0;
+        for (var xFirst : Arrays.asList(-radius, 0)) {
+          for (var yFirst : Arrays.asList(-radius, 0)) {
+            for (int dy = xFirst; dy <= xFirst + radius; dy++) {
+              for (int dx = yFirst; dx <= yFirst + radius; dx++) {
+                int rgb = originalImage.getRGB(x + dx, y + dy);
+                regions[regionCount][regionSizes[regionCount]++] = rgb;
+                var color = new Color(rgb);
+                sumA[regionCount] += color.getAlpha();
+                sumR[regionCount] += color.getRed();
+                sumG[regionCount] += color.getGreen();
+                sumB[regionCount] += color.getBlue();
+              }
+            }
+            regionCount++;
+          }
+        }
+
+        int[] meanR = new int[4];
+        int[] meanG = new int[4];
+        int[] meanB = new int[4];
+        int[] meanA = new int[4];
+        double[] variances = new double[4];
+
+        for (int i = 0; i < 4; i++) {
+          meanA[i] = sumA[i] / regionSizes[i];
+          meanR[i] = sumR[i] / regionSizes[i];
+          meanG[i] = sumG[i] / regionSizes[i];
+          meanB[i] = sumB[i] / regionSizes[i];
+
+          double variance = 0;
+          for (int j = 0; j < regionSizes[i]; j++) {
+            int rgb = regions[i][j];
+            var color = new Color(rgb);
+            variance += Math.pow(color.getRed() - meanR[i], 2)
+                        + Math.pow(color.getGreen() - meanG[i], 2)
+                        + Math.pow(color.getBlue() - meanB[i], 2);
+          }
+          variances[i] = variance / regionSizes[i];
+        }
+
+        int bestRegion = 0;
+        for (int i = 1; i < 4; i++) {
+          if (variances[i] < variances[bestRegion]) {
+            bestRegion = i;
+          }
+        }
+
+        var resultColor = new Color(meanR[bestRegion], meanG[bestRegion], meanB[bestRegion], meanA[bestRegion]);
+        filteredImage.setRGB(x, y, resultColor.getRGB());
+      }
+    }
 
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    ImageIO.write(reflectedImage, contentType, outputStream);
+    ImageIO.write(filteredImage, contentType, outputStream);
     return outputStream.toByteArray();
   }
 }
