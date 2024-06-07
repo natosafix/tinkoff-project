@@ -17,7 +17,6 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class BlackWhiteProcessor {
+public class ReflectionProcessor {
   private final KafkaProducer kafkaProducer;
   private final ProcessedImageRepository repository;
   private final MinioService minioService;
@@ -57,7 +56,7 @@ public class BlackWhiteProcessor {
     log.info("Получено следующее сообщение из топика {}:\nkey: {},\nvalue: {}",
             record.topic(), record.key(), request);
 
-    if (request.getFilters()[0] != Filter.BlackWhite) {
+    if (request.getFilters()[0] != Filter.Reflection) {
       acknowledgment.acknowledge();
       return;
     }
@@ -85,7 +84,6 @@ public class BlackWhiteProcessor {
     } else {
       request.setImageId(newImageId);
       request.setFilters(Arrays.copyOfRange(request.getFilters(), 1, request.getFilters().length));
-      kafkaProducer.sendWip(new Gson().toJson(request));
     }
 
     acknowledgment.acknowledge();
@@ -96,19 +94,25 @@ public class BlackWhiteProcessor {
     var originalImage = ImageIO.read(inputStream);
     var width = originalImage.getWidth();
     var height = originalImage.getHeight();
-    var blackWhiteImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+    var reflectedImage = new BufferedImage(width * 2, height, originalImage.getType());
 
     var numThreads = Runtime.getRuntime().availableProcessors();
     var executor = Executors.newFixedThreadPool(numThreads);
 
-    for (var y = 0; y < height; y++) {
-      var finalY = y;
+    for (int y = 0; y < height; y++) {
+      final var finalY = y;
       executor.submit(() -> {
-        for (var x = 0; x < width; x++) {
-          var color = new Color(originalImage.getRGB(x, finalY));
-          var grayValue = (color.getRed() + color.getGreen() + color.getBlue()) / 3;
-          var grayColor = new Color(grayValue, grayValue, grayValue).getRGB();
-          blackWhiteImage.setRGB(x, finalY, grayColor);
+        for (int x = 0; x < width; x++) {
+          reflectedImage.setRGB(x, finalY, originalImage.getRGB(x, finalY));
+        }
+      });
+    }
+
+    for (int y = 0; y < height; y++) {
+      final var finalY = y;
+      executor.submit(() -> {
+        for (int x = 0; x < width; x++) {
+          reflectedImage.setRGB(width + x, finalY, originalImage.getRGB(width - 1 - x, finalY));
         }
       });
     }
@@ -117,7 +121,7 @@ public class BlackWhiteProcessor {
     executor.awaitTermination(1, TimeUnit.HOURS);
 
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    ImageIO.write(blackWhiteImage, contentType, outputStream);
+    ImageIO.write(reflectedImage, contentType, outputStream);
     return outputStream.toByteArray();
   }
 }
