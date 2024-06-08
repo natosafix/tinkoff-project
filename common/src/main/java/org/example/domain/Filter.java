@@ -5,5 +5,6 @@ public enum Filter {
     Reflection,
     Blur,
     InverseColor,
-    Kuwahara
+    Kuwahara,
+    Immaga
 }
