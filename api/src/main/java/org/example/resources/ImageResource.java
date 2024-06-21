@@ -90,15 +90,15 @@ public class ImageResource {
                           schema = @Schema(implementation = UiSuccessContainer.class)))
         })
 
-  @GetMapping(value = "/image/{image-id}")
-  public String downloadImage(
+  @GetMapping(value = "/image/{image-id}", produces = {MediaType.IMAGE_PNG_VALUE,
+          MediaType.IMAGE_JPEG_VALUE})
+  public byte[] downloadImage(
           @PathVariable("image-id") UUID imageId,
           @RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken) throws Exception {
     var jwtToken = bearerToken.substring("Bearer ".length());
     var authorUsername = jwtService.getUsernameFromToken(jwtToken);
 
-    return new String(imageService.downloadImage(imageId.toString(), authorUsername),
-            StandardCharsets.UTF_8);
+    return imageService.downloadImage(imageId.toString(), authorUsername);
   }
 
   /**

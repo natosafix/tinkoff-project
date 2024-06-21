@@ -20,6 +20,9 @@
         <module>api</module>
         <module>black-white-filter</module>
         <module>common</module>
+        <module>blur-filter</module>
+        <module>inverse-color-filter</module>
+        <module>kuwahara-filter</module>
     </modules>
 
     <properties>

@@ -9,6 +9,6 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 public class KafkaDoneImage implements Serializable {
-  private String imageId;
+  private UUID imageId;
   private UUID requestId;
 }
