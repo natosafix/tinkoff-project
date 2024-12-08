@@ -2,11 +2,13 @@ package org.example.services;
 
 import com.google.gson.Gson;
 
+import io.github.bucket4j.Bucket;
 import lombok.RequiredArgsConstructor;
 import org.example.domain.Filter;
 import org.example.domain.Image;
 import org.example.domain.ImageFiltersRequest;
 import org.example.domain.Status;
+import org.example.exceptions.BadRequestException;
 import org.example.exceptions.ImageFiltersRequestNotFoundException;
 import org.example.exceptions.ImageNotFoundException;
 import org.example.kafka.KafkaImageFiltersRequest;
@@ -24,6 +26,7 @@ public class ImageFiltersRequestService {
   private final UserService userService;
   private final ImageService imageService;
   private final KafkaProducer kafkaProducer;
+  private final Bucket bucket;
 
   /**
    * Get ImageFiltersRequest.
@@ -52,6 +55,14 @@ public class ImageFiltersRequestService {
    * @return ImageFiltersRequest
    */
   public ImageFiltersRequest apply(String sourceImageId, String[] filters, String username) {
+    var filtersArray = Arrays.stream(filters).map(Filter::valueOf).toArray(Filter[]::new);
+
+    if (Arrays.stream(filtersArray).anyMatch(f -> f == Filter.Immaga)) {
+      var canFilterImage = bucket.tryConsume(1);
+      if (!canFilterImage)
+        throw new BadRequestException("Превышен допустимы лимит запросов фильтра Immaga");
+    }
+
     var requestId = UUID.randomUUID();
     var user = userService.getUserByUsername(username);
     var image = imageService.getImage(sourceImageId);
@@ -61,7 +72,6 @@ public class ImageFiltersRequestService {
             .setSourceImage(image)
             .setStatus(Status.WIP);
     request = repository.save(request);
-    var filtersArray = Arrays.stream(filters).map(Filter::valueOf).toArray(Filter[]::new);
     var kafkaRequest = new KafkaImageFiltersRequest(
             UUID.fromString(sourceImageId),
             requestId,

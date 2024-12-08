@@ -1,0 +1,54 @@
+spring:
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:postgresql://localhost:15432/server_db
+    username: postgres
+    password: postgres
+    driverClassName: org.postgresql.Driver
+  liquibase:
+    change-log: classpath:liquibase/master.xml
+    enabled: true
+    drop-first: false
+    default-schema: public
+
+  kafka:
+    listener.ack-mode: manual
+    bootstrap-servers:
+      - localhost:9092
+      - localhost:9093
+      - localhost:9094
+  cloud:
+    zookeeper:
+      config.enabled: false
+      connect-string: localhost:2181
+
+minio:
+  url: http://localhost:9000
+  port: 9000
+  access-key: user
+  secret-key: password
+  secure: false
+  bucket: minio-storage
+  image-size: 10485760
+  ttl-in-days: 1
+
+server:
+  port: 8086
+
+logging:
+  level:
+    liquibase: info
+
+application:
+  kafka:
+    topic-wip: images.wip
+    topic-done: images.done
+    partitions: 5
+    replicas: 3
+    group-id: custom-group-im
+  immaga:
+    credentials: "acc_a61963a28f9ff08:38740d3e91f6d72c10bc3189c5041c9c"
